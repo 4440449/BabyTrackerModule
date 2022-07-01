@@ -27,7 +27,9 @@ let package = Package(
         // Targets can depend on other targets in this package, and on products in packages this package depends on.
         .target(
             name: "BabyTrackerModule",
-            dependencies: ["BabyNet", "MommysEye"]),
+            dependencies: ["BabyNet", "MommysEye"],
+            resources: [.copy("BabyTrackerWW.storyboard")]
+        ),
         .testTarget(
             name: "BabyTrackerModuleTests",
             dependencies: ["BabyTrackerModule"]),
