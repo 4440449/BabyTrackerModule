@@ -28,7 +28,7 @@ let package = Package(
         .target(
             name: "BabyTrackerModule",
             dependencies: ["BabyNet", "MommysEye"],
-            resources: [.copy("BabyTrackerWW.storyboard")]
+            resources: [.process("BabyTrackerWW.storyboard")]
         ),
         .testTarget(
             name: "BabyTrackerModuleTests",
