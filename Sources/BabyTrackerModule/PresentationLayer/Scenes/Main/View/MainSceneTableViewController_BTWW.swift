@@ -151,8 +151,7 @@ final class MainSceneTableViewController_BTWW: UITableViewController, UIPopoverP
     
     
     @IBAction func closeSceneButton(_ sender: Any) {
-        print("closeSceneButton")
-        presentingViewController?.dismiss(animated: false, completion: nil)
+        presentingViewController?.dismiss(animated: true, completion: nil)
     }
     
     @IBAction func changeDateButton(_ sender: Any) {
