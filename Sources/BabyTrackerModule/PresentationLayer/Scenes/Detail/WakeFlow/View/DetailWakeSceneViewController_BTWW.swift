@@ -10,46 +10,47 @@ import UIKit
 import MommysEye
 
 
-class DetailWakeSceneViewController_BTWW: UIViewController {
+class DetailWakeSceneViewController_BTWW: UIViewController,
+                                          DetailWakeScenePresenterOutputProtocol_BTWW {
     
     // MARK: - Dependencies
     
     let configurator = DetailWakeSceneConfigurator_BTWW()
-    var viewModel: DetailWakeSceneViewModelProtocol_BTWW!
+    private var presenter: DetailWakeScenePresenterInputProtocol_BTWW!
+    
+    func setupPresenter(_ presenter: DetailWakeScenePresenterInputProtocol_BTWW) {
+        self.presenter = presenter
+    }
     
     
     // MARK: - Lifecycle View
     
     override func viewDidLoad() {
         super.viewDidLoad()
+        setupLabels()
         setupOutletButtons()
         setupTextView()
         setupObservers()
-        viewModel.viewDidLoad()
+        presenter.viewDidLoad()
     }
     
     
     // MARK: - Input data flow
     
-    private func setupObservers() {
-        viewModel.wake.subscribe(observer: self) { [weak self] wake in
-            guard let self = self else { return }
-            self.wakeUpOutletButton.setTitle(wake.wakeUp.rawValue, for: .normal)
-            self.wakeWindowOutletButton.setTitle(wake.wakeWindow.rawValue, for: .normal)
-            self.signsOutletButton.setTitle(wake.signs.rawValue, for: .normal)
-            self.textView.text = wake.note
-            self.counterTextViewLabel.text = "\(self.maxTextViewLenghtCount - wake.note.count)"
-            self.manageTextViewPlaceholder()
-        }
-        
-        NotificationCenter.default.addObserver(self, selector: #selector(adjustKeyboardFrame(notification:)), name: UIResponder.keyboardWillShowNotification, object: nil)
-        
-        NotificationCenter.default.addObserver(self, selector: #selector(adjustKeyboardFrame(notification:)), name: UIResponder.keyboardWillHideNotification, object: nil)
+    func reloadData() {
+        wakeUpOutletButton.setTitle(presenter.getWakeUpOutletButtonText(), for: .normal)
+        wakeWindowOutletButton.setTitle(presenter.getWakeWindowOutletButtonText(), for: .normal)
+        signsOutletButton.setTitle(presenter.getSignsOutletButtonText(), for: .normal)
+        textView.text = presenter.getTexForTextView()
+        counterTextViewLabel.text = "\(maxTextViewLenghtCount - presenter.getCounterForTextViewLabel())"
+        manageTextViewPlaceholder()
     }
     
     
     // MARK: - UI
-    
+    @IBOutlet weak var wakeUpLabel: UILabel!
+    @IBOutlet weak var wakeWindowLabel: UILabel!
+    @IBOutlet weak var signsLabel: UILabel!
     @IBOutlet weak var wakeUpOutletButton: UIButton!
     @IBOutlet weak var wakeWindowOutletButton: UIButton!
     @IBOutlet weak var signsOutletButton: UIButton!
@@ -60,27 +61,26 @@ class DetailWakeSceneViewController_BTWW: UIViewController {
     @IBOutlet weak var placeholderTextViewLabel: UILabel!
     @IBOutlet weak var counterTextViewLabel: UILabel!
     
-    
-    
-    @IBAction func wakeUpButton(_ sender: Any) {
-        self.performSegue(withIdentifier: String.init(describing: Wake.WakeUp.self), sender: nil)
+    private func setupLabels() {
+        wakeUpLabel.font = UIFont(name: "Montserrat-Regular", size: 22)!
+        wakeWindowLabel.font = UIFont(name: "Montserrat-Regular", size: 22)!
+        signsLabel.font = UIFont(name: "Montserrat-Regular", size: 22)!
     }
     
-    @IBAction func wakeWindowButton(_ sender: Any) {
-        self.performSegue(withIdentifier: String.init(describing: Wake.WakeWindow.self), sender: nil)
+    private func setupOutletButtons() {
+        wakeUpOutletButton.layer.cornerRadius = 5
+        wakeUpOutletButton.titleLabel?.font = UIFont(name: "Montserrat-Regular", size: 22)!
+        wakeWindowOutletButton.layer.cornerRadius = 5
+        wakeWindowOutletButton.titleLabel?.font = UIFont(name: "Montserrat-Regular", size: 22)!
+        signsOutletButton.layer.cornerRadius = 5
+        signsOutletButton.titleLabel?.font = UIFont(name: "Montserrat-Regular", size: 22)!
+        saveOutletButton.layer.cornerRadius = 5
+        saveOutletButton.titleLabel?.font = UIFont(name: "Montserrat-Regular", size: 20)!
     }
     
-    @IBAction func signsButton(_ sender: Any) {
-        self.performSegue(withIdentifier: String.init(describing: Wake.Signs.self), sender: nil)
-    }
-    
-    @IBAction func saveWakeButton(_ sender: Any) {
-        viewModel.saveButtonTapped()
-        presentingViewController?.dismiss(animated: true, completion: nil)
-    }
-    
-    @IBAction func backButton(_ sender: Any) {
-        presentingViewController?.dismiss(animated: true, completion: nil)
+    private func setupTextView() {
+        textView.delegate = self
+        backgroundView.layer.cornerRadius = 10
     }
     
     override func touchesBegan(_ touches: Set<UITouch>, with event: UIEvent?) {
@@ -94,9 +94,30 @@ class DetailWakeSceneViewController_BTWW: UIViewController {
     
     
     // MARK: - Navigation
-
+    
     override func prepare(for segue: UIStoryboardSegue, sender: Any?) {
-        viewModel.prepare(for: segue)
+        presenter.prepare(for: segue)
+    }
+    
+    @IBAction func wakeUpButton(_ sender: Any) {
+        performSegue(withIdentifier: String.init(describing: Wake.WakeUp.self), sender: nil)
+    }
+    
+    @IBAction func wakeWindowButton(_ sender: Any) {
+        performSegue(withIdentifier: String.init(describing: Wake.WakeWindow.self), sender: nil)
+    }
+    
+    @IBAction func signsButton(_ sender: Any) {
+        performSegue(withIdentifier: String.init(describing: Wake.Signs.self), sender: nil)
+    }
+    
+    @IBAction func saveWakeButton(_ sender: Any) {
+        presenter.saveButtonTapped()
+        presentingViewController?.dismiss(animated: true, completion: nil)
+    }
+    
+    @IBAction func backButton(_ sender: Any) {
+        presentingViewController?.dismiss(animated: true, completion: nil)
     }
     
     override func performSegue(withIdentifier identifier: String, sender: Any?) {
@@ -104,38 +125,48 @@ class DetailWakeSceneViewController_BTWW: UIViewController {
     
     
     // MARK: - Deinit
-
+    
     deinit {
-        print("WakeDetailSceneViewController - is Deinit!")
+//        print("WakeDetailSceneViewController - is Deinit!")
     }
     
 }
 
 
 
-// MARK: - UI Setup
+
+// MARK: - TextView Delegate
 
 extension DetailWakeSceneViewController_BTWW: UITextViewDelegate {
     
-    // MARK: - Buttons
-    
-    private func setupOutletButtons() {
-        wakeUpOutletButton.layer.cornerRadius = 5
-        wakeWindowOutletButton.layer.cornerRadius = 5
-        signsOutletButton.layer.cornerRadius = 5
-        saveOutletButton.layer.cornerRadius = 5
+    //Keyboard frame observing
+    private func setupObservers() {
+        NotificationCenter.default.addObserver(self, selector: #selector(adjustKeyboardFrame(notification:)), name: UIResponder.keyboardWillShowNotification, object: nil)
+        
+        NotificationCenter.default.addObserver(self, selector: #selector(adjustKeyboardFrame(notification:)), name: UIResponder.keyboardWillHideNotification, object: nil)
     }
     
+    @objc func adjustKeyboardFrame(notification: Notification) {
+        guard let userInfo = notification.userInfo as? [String : Any],
+              let keyboardFrame = (userInfo[UIResponder.keyboardFrameEndUserInfoKey] as? NSValue)?.cgRectValue else { return }
+        //if rotation enabled {
+        //        let keyboardViewFrame = view.convert(keyboardFrame, from: view.window)
+        //    }
+        if notification.name == UIResponder.keyboardWillHideNotification {
+            scrollView.contentInset.bottom = .zero
+        } else
+        if notification.name == UIResponder.keyboardWillShowNotification {
+            scrollView.contentInset.bottom = (keyboardFrame.height - view.safeAreaInsets.bottom) + 3
+            scrollView.scrollRectToVisible(backgroundView.frame, animated: true)
+        } else {
+            return
+        }
+    }
     
-    // MARK: - TextView
-    
+    // Initial setup
     private var maxTextViewLenghtCount: Int { get { 500 } }
     
-    private func setupTextView() {
-        textView.delegate = self
-        backgroundView.layer.cornerRadius = 10
-    }
-    
+    // UI Logic
     private func manageTextViewPlaceholder() {
         if textView.text.isEmpty {
             placeholderTextViewLabel.isHidden = false
@@ -144,6 +175,7 @@ extension DetailWakeSceneViewController_BTWW: UITextViewDelegate {
         }
     }
     
+    // Delegate
     func textViewDidBeginEditing(_ textView: UITextView) {
         placeholderTextViewLabel.isHidden = true
     }
@@ -152,27 +184,10 @@ extension DetailWakeSceneViewController_BTWW: UITextViewDelegate {
         manageTextViewPlaceholder()
     }
     
-    @objc func adjustKeyboardFrame(notification: Notification) {
-        guard let userInfo = notification.userInfo as? [String : Any],
-            let keyboardFrame = (userInfo[UIResponder.keyboardFrameEndUserInfoKey] as? NSValue)?.cgRectValue else { return }
-        //if rotation enabled {
-        //        let keyboardViewFrame = view.convert(keyboardFrame, from: view.window)
-        //    }
-        if notification.name == UIResponder.keyboardWillHideNotification {
-            scrollView.contentInset.bottom = .zero
-        } else
-            if notification.name == UIResponder.keyboardWillShowNotification {
-                scrollView.contentInset.bottom = (keyboardFrame.height - view.safeAreaInsets.bottom) + 3
-                scrollView.scrollRectToVisible(backgroundView.frame, animated: true)
-            } else {
-                return
-        }
-    }
-    
     func textViewDidChange(_ textView: UITextView) {
         //Text validation
         let validatedText = String(textView.text.prefix(maxTextViewLenghtCount))
-        viewModel.textViewDidChange(text: validatedText)
+        presenter.textViewDidChange(text: validatedText)
     }
     
     func textView(_ textView: UITextView, shouldChangeTextIn range: NSRange, replacementText text: String) -> Bool {
@@ -184,3 +199,6 @@ extension DetailWakeSceneViewController_BTWW: UITextViewDelegate {
     }
     
 }
+
+
+

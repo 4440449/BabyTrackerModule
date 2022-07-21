@@ -1,5 +1,5 @@
 //
-//  CalendarSceneViewModel_BTWW.swift
+//  CalendarScenePresenter_BTWW.swift
 //  Baby tracker
 //
 //  Created by Max on 12.07.2021.
@@ -9,8 +9,7 @@
 import Foundation
 
 
-protocol CalendarSceneViewModelProtocol_BTWW {
-    
+protocol CalendarScenePresenterInputProtocol_BTWW {
     func getCurrentDate() -> Date
     func format(date: Date) -> String
     func dateSelected(new date: Date)
@@ -18,19 +17,26 @@ protocol CalendarSceneViewModelProtocol_BTWW {
 }
 
 
-final class CalendarSceneViewModel_BTWW: CalendarSceneViewModelProtocol_BTWW {
+final class CalendarScenePresenter_BTWW: CalendarScenePresenterInputProtocol_BTWW {
  
-    private let delegate: CalendarSceneDelegate_BTWW
+    //MARK: - Dependencies
     
-    init(delegate: CalendarSceneDelegate_BTWW) {
-        self.delegate = delegate
+    private let interactor: CalendarSceneInteractor_BTWW
+    
+    init(interactor: CalendarSceneInteractor_BTWW) {
+        self.interactor = interactor
     }
     
-    private var date: Date!
+    
+    //MARK: - Buffer
+
+    private var date = Date()
     
     
+    // MARK: - Input interface
+
     func getCurrentDate() -> Date {
-        date = delegate.shareStateForCalendarScene().date
+        date = interactor.shareStateForCalendarScene().date
         return date
     }
     
@@ -47,7 +53,7 @@ final class CalendarSceneViewModel_BTWW: CalendarSceneViewModelProtocol_BTWW {
     }
     
     func saveButtonTapped() {
-        delegate.changeDate(new: date)
+        interactor.changeDate(new: date)
     }
 
 }

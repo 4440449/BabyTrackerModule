@@ -6,7 +6,7 @@ import PackageDescription
 let package = Package(
     name: "BabyTrackerModule",
     platforms: [
-        .iOS(.v14)
+        .iOS(.v13)
     ],
     products: [
         // Products define the executables and libraries a package produces, and make them visible to other packages.
@@ -28,8 +28,8 @@ let package = Package(
         .target(
             name: "BabyTrackerModule",
             dependencies: ["BabyNet", "MommysEye"],
-            resources: [.process("BabyTrackerWW.storyboard"),
-                        .process("Baby_tracker.xcdatamodeld")]
+            resources: [.process("PresentationLayer/Scenes/BabyTrackerWW.storyboard"),
+                        .process("DataLayer/Infrastructure/LocalStorage/CoreData/Entities/Baby_tracker.xcdatamodeld")]
         ),
         .testTarget(
             name: "BabyTrackerModuleTests",

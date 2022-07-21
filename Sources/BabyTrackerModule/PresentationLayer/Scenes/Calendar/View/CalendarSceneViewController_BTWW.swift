@@ -12,38 +12,59 @@ import UIKit
 
 final class CalendarSceneViewController_BTWW: UIViewController {
     
-    var configurator = CalendarSceneConfigurator_BTWW()
-    var viewModel: CalendarSceneViewModelProtocol_BTWW!
+    // MARK: - Dependencies
+    
+    let configurator = CalendarSceneConfigurator_BTWW()
+    private var presenter: CalendarScenePresenterInputProtocol_BTWW!
+    
+    func setupPresenter(_ presenter: CalendarScenePresenterInputProtocol_BTWW) {
+        self.presenter = presenter
+    }
+    
+    
+    // MARK: - Lifecycle View
+    
+    override func viewDidLoad() {
+        super.viewDidLoad()
+        setupDatePicker()
+        setupLabels()
+        setupOutletButtons()
+    }
+    
+    
+    // MARK: - UI
     
     @IBOutlet weak var datePicker: UIDatePicker!
     @IBOutlet weak var dateLabel: UILabel!
     @IBOutlet weak var saveButton: UIButton!
     
-    override func viewDidLoad() {
-        super.viewDidLoad()
-        
+    private func setupLabels() {
+        dateLabel.text = presenter.format(date:datePicker.date)
+        dateLabel.font = UIFont(name: "Montserrat-Bold", size: 24)!
+    }
+    
+    private func setupDatePicker() {
+        if #available(iOS 14.0, *) {
+            datePicker.preferredDatePickerStyle = .inline
+        }
         datePicker.datePickerMode = .date
         datePicker.locale = Locale(identifier: "ru")
-//        datePicker.locale = Locale(identifier: "ru_RU")
-//        if #available(iOS 13.4, *) {
-//            datePicker.preferredDatePickerStyle = .compact
-//        }
         datePicker.addTarget(self, action: #selector(dateChanged), for: .valueChanged)
-        datePicker.date = viewModel.getCurrentDate()
-        dateLabel.text = viewModel.format(date:datePicker.date)
-        
+        datePicker.date = presenter.getCurrentDate()
+    }
+    
+    private func setupOutletButtons() {
         saveButton.layer.cornerRadius = 5
+        saveButton.titleLabel?.font = UIFont(name: "Montserrat-Regular", size: 20)!
     }
     
     @objc func dateChanged() {
-        dateLabel.text = viewModel.format(date:datePicker.date)
-        viewModel.dateSelected(new: datePicker.date)
-        
+        dateLabel.text = presenter.format(date:datePicker.date)
+        presenter.dateSelected(new: datePicker.date)
     }
     
     @IBAction func saveButton(_ sender: UIButton) {
-        viewModel.saveButtonTapped()
-//        navigationController?.popViewController(animated: true)
+        presenter.saveButtonTapped()
         self.dismiss(animated: true, completion: nil)
     }
     
